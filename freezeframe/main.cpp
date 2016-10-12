@@ -18,7 +18,8 @@ using namespace std;
 //   ESC   - exit
 //   s     - save frame to <dir>
 //   p     - toggle pause between frames
-//   d     - pause between frames
+//   v     - toggle vertical flip
+//   h     - toggle horizontal flip
 
 int main(int argc, char** argv)
 {
@@ -55,7 +56,7 @@ int main(int argc, char** argv)
     bool flipHorizontal = false;
     bool flipVertical = false;
     unsigned int saveNum = 0;
-    int waitMS = -1;
+    int waitMS = 0;
     
     for (;;)
     {
@@ -77,10 +78,7 @@ int main(int argc, char** argv)
             imwrite(filepath + "/frame" + to_string(saveNum) + ".png", frame);
             break;
         case 'p':
-            waitMS = 50;
-            break;
-        case 'd':
-            waitMS = -1;
+            waitMS = 50 - waitMS;
             break;
         case 'h': // flip horizontal
             flipHorizontal = !flipHorizontal;
