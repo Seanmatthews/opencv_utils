@@ -17,27 +17,31 @@ using namespace std;
 //   SPACE - next frame
 //   ESC   - exit
 //   s     - save frame to <dir>
-//   f     - no pause between frames
+//   p     - toggle pause between frames
 //   d     - pause between frames
 
 int main(int argc, char** argv)
 {
-    char dateString[16];
-    auto as_time_t = chrono::system_clock::to_time_t(chrono::system_clock::now());
-    strftime(dateString, 16, "%Y%m%d/%H%M%S", localtime(&as_time_t));
-    string filepath = to_string(*argv[1]) + string(dateString);
-
     if (argc < 3)
     {
         cerr << "Usage: ./freeze <save dir> <video>\n";
         return -1;
     }
 
-    if (0 > mkdir(filepath.c_str(), S_IRWXU|S_IROTH|S_IXOTH))
+    char dateString[16];
+    auto as_time_t = chrono::system_clock::to_time_t(chrono::system_clock::now());
+    strftime(dateString, 16, "%Y%m%d/%H%M%S", localtime(&as_time_t));
+    string filepath = string(argv[1]) + string(dateString);
+    string command = "mkdir -p " + filepath;
+    
+    if (0 > system(command.c_str()))
+//    if (0 > mkdir(filepath.c_str(), S_IRWXU|S_IROTH|S_IXOTH))
     {
         cerr << "Could not create local frame dir!\n";
         return -1;
     }
+
+    cout << "Saving all captures to " + filepath << endl;
 
     VideoCapture cap(argv[2]);
     if (!cap.isOpened())
@@ -48,12 +52,19 @@ int main(int argc, char** argv)
             
     namedWindow("window", WINDOW_AUTOSIZE);
 
+    bool flipHorizontal = false;
+    bool flipVertical = false;
     unsigned int saveNum = 0;
     int waitMS = -1;
+    
     for (;;)
     {
         Mat frame;
         cap >> frame;
+
+        if (flipHorizontal) flip(frame, frame, 0);
+        if (flipVertical) flip(frame, frame, 1);
+        
         imshow("window", frame);
 
         // Ubuntu-specific codes
@@ -65,11 +76,17 @@ int main(int argc, char** argv)
         case 's':
             imwrite(filepath + "/frame" + to_string(saveNum) + ".png", frame);
             break;
-        case 'f':
+        case 'p':
             waitMS = 50;
             break;
         case 'd':
             waitMS = -1;
+            break;
+        case 'h': // flip horizontal
+            flipHorizontal = !flipHorizontal;
+            break;
+        case 'v':
+            flipVertical = !flipVertical;
             break;
         case ' ':
         default:
